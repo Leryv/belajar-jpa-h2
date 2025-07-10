@@ -2,17 +2,24 @@ package com.belajar.belajarjpah2.controller;
 
 import com.belajar.belajarjpah2.model.CategoryModel;
 import com.belajar.belajarjpah2.repository.CategoryRepository;
+import com.belajar.belajarjpah2.utils.MessageModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/categories")
 public class CategoryController {
 
+    @Autowired
     private final CategoryRepository repository;
+    private MessageModel messageModel;
 
     public CategoryController(CategoryRepository repository) {
         this.repository = repository;
@@ -20,30 +27,65 @@ public class CategoryController {
 
     // GET all categories
     @GetMapping
-    public List<CategoryModel> getAllCategories() {
-        return repository.findAll();
+    public ResponseEntity<MessageModel> getAllCategories(
+            @RequestParam(value = "page", defaultValue = "0") Integer page,
+            @RequestParam(value = "size", defaultValue = "10") Integer size,
+            @RequestParam(defaultValue = "", required = false) String nameCategory
+    ) {
+        messageModel = new MessageModel();
+        Pageable pageRequest = PageRequest.of(page, size);
+        Page<CategoryModel> data;
+
+        data = repository.findAllByCategoryNameContaining(nameCategory,pageRequest);
+        messageModel.setStatus(true);
+        messageModel.setData(data.getContent());
+        messageModel.setTotalPages(data.getTotalPages());
+        messageModel.setCurrentPage(data.getNumber());
+        messageModel.setTotalItems((int) data.getTotalElements());
+        messageModel.setNumberOfElement(data.getNumberOfElements());
+        if (data.getContent().isEmpty()) {
+            messageModel.setMessage("Data Kosong");
+        } else {
+            messageModel.setMessage("Data Berhasil Di Get");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(messageModel);
     }
 
     // GET category by id
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryModel> getCategoryById(@PathVariable Long id) {
+    public ResponseEntity<MessageModel> getCategoryById(@PathVariable Long id) {
+        messageModel = new MessageModel();
+
         Optional<CategoryModel> category = repository.findById(id);
-        return category.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        messageModel.setStatus(true);
+        if (category.isEmpty()) {
+            messageModel.setMessage("Data Kosong");
+        } else {
+            messageModel.setMessage("Data Tidak Ditemukan");
+        }
+        messageModel.setData(category);
+
+        return ResponseEntity.status(HttpStatus.OK).body(messageModel);
     }
 
     // CREATE category
     @PostMapping
-    public CategoryModel createCategory(@RequestBody CategoryModel category) {
-        return repository.save(category);
+    public ResponseEntity<MessageModel> createCategory(@RequestBody CategoryModel category) {
+        messageModel = new MessageModel();
+        messageModel.setStatus(true);
+        messageModel.setMessage("Data Berhasil Di Update");
+        messageModel.setData(category);
+        repository.save(category);
+        return ResponseEntity.status(HttpStatus.OK).body(messageModel);
     }
 
     // UPDATE category
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryModel> updateCategory(
+    public ResponseEntity<MessageModel> updateCategory(
             @PathVariable Long id,
             @RequestBody CategoryModel updatedCategory
     ) {
+        messageModel = new MessageModel();
         Optional<CategoryModel> existingCategory = repository.findById(id);
 
         if (existingCategory.isPresent()) {
@@ -52,20 +94,28 @@ public class CategoryController {
                 category.setCategoryName(updatedCategory.getCategoryName());
             }
             CategoryModel savedCategory = repository.save(category);
-            return ResponseEntity.ok(savedCategory);
+            messageModel.setStatus(true);
+            messageModel.setMessage("Data Berhasil Di Update");
+            messageModel.setData(savedCategory);
         } else {
-            return ResponseEntity.notFound().build();
+            messageModel.setStatus(false);
+            messageModel.setMessage("Data Gagal Di Update");
         }
+        return ResponseEntity.status(HttpStatus.OK).body(messageModel);
     }
 
     // DELETE category
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<MessageModel> deleteCategory(@PathVariable Long id) {
+        messageModel = new MessageModel();
         if (repository.existsById(id)) {
             repository.deleteById(id);
-            return ResponseEntity.noContent().build();
+            messageModel.setStatus(true);
+            messageModel.setMessage("Data Berhasil Di Delete");
         } else {
-            return ResponseEntity.notFound().build();
+            messageModel.setStatus(false);
+            messageModel.setMessage("Data Tidak Di temukan");
         }
+        return ResponseEntity.status(HttpStatus.OK).body(messageModel);
     }
 }
