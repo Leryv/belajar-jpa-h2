@@ -1,5 +1,5 @@
 ### Get all categories
-GET http://localhost:8080/api/categories
+GET http://localhost:8080/api/categories?page=0&size=10&nameCategory=Alexander%20The%20Great
 
 ###
 
@@ -14,7 +14,7 @@ Content-Type: application/json
 
 {
   "categoryId": 1,
-  "categoryName": "Books"
+  "categoryName": "Books of Harry Potter"
 }
 
 ###
@@ -24,7 +24,7 @@ PUT http://localhost:8080/api/categories/1
 Content-Type: application/json
 
 {
-  "categoryName": "Updated Book Category"
+  "categoryName": "Book Of Harry Potter"
 }
 
 ###
