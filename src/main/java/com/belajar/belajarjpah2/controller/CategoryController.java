@@ -3,7 +3,6 @@ package com.belajar.belajarjpah2.controller;
 import com.belajar.belajarjpah2.model.CategoryModel;
 import com.belajar.belajarjpah2.repository.CategoryRepository;
 import com.belajar.belajarjpah2.utils.MessageModel;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +16,6 @@ import java.util.Optional;
 @RequestMapping("/api/categories")
 public class CategoryController {
 
-    @Autowired
     private final CategoryRepository repository;
     private MessageModel messageModel;
 
